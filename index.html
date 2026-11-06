@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026城市匹配测试</title>
+    <style>
+        :root {
+            --primary: #ff6b9d; 
+            --primary-dark: #e84a7a;
+            --bg-color: #fff5f8; 
+            --text-main: #5d4058; 
+            --text-sub: #a68b9d; 
+            --card-bg: #ffffff;
+            --border-color: #fbd6e3;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            display: flex; justify-content: center; 
+            min-height: 100vh; 
+            position: relative; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+        }
+
+        .bg-hearts { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; }
+        .heart { position: absolute; font-size: 20px; opacity: 0.4; animation: floatUp 10s linear infinite; }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0.5) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) scale(1.2) rotate(360deg); opacity: 0; }
+        }
+
+        .app-container { 
+            width: 100%; max-width: 480px; 
+            background: transparent; 
+            min-height: 100vh; position: relative; z-index: 1;
+            display: flex; flex-direction: column;
+        }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, #ff9a9e, #ff6b9d); 
+            color: white; border: none; padding: 18px; border-radius: 16px; 
+            font-size: 18px; font-weight: 600; cursor: pointer; 
+            width: 100%; box-shadow: 0 8px 20px rgba(255, 107, 157, 0.3); 
+            transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; gap: 8px;
+            margin-bottom: 40px; 
+        }
+        .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+
+        #verify-screen { 
+            padding: 50px 24px 30px; display: flex; flex-direction: column; align-items: center; flex: 1;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .icon-box { 
+            width: 100px; height: 100px; background: linear-gradient(135deg, #ffb6c1, #ff6b9d); 
+            border-radius: 28px; display: flex; align-items: center; justify-content: center; 
+            font-size: 50px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(255, 107, 157, 0.3);
+            animation: bounce 2s infinite ease-in-out;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        #verify-screen h1 { color: #5d4058; font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px; }
+        .subtitle { color: #d4a5b8; font-size: 14px; letter-spacing: 5px; margin-bottom: 30px; font-weight: 600; }
+        
+        .verify-card { 
+            background: var(--card-bg); border-radius: 24px; padding: 30px 20px; 
+            width: 100%; margin-bottom: 20px; text-align: center;
+            box-shadow: 0 4px 20px rgba(255, 107, 157, 0.08);
+            position: relative;
+        }
+        .verify-card::before { content: '🌸'; position: absolute; top: -15px; left: 20px; font-size: 30px; transform: rotate(-15deg); }
+        .verify-card::after { content: '💖'; position: absolute; bottom: -15px; right: 20px; font-size: 24px; }
+
+        .verify-card h2 { font-size: 18px; color: var(--primary-dark); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; }
+        
+        .input-wrapper { 
+            border: 2px solid var(--border-color); border-radius: 16px; padding: 15px; 
+            margin-bottom: 15px; transition: border-color 0.3s;
+        }
+        .input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 10px rgba(255, 107, 157, 0.2); }
+        .input-wrapper input { 
+            border: none; outline: none; width: 100%; text-align: center; 
+            font-size: 30px; letter-spacing: 20px; color: var(--primary); font-weight: bold;
+            background: transparent; padding-left: 20px; 
+        }
+        .input-wrapper input::placeholder { letter-spacing: normal; font-size: 16px; color: #ddd; font-weight: normal; padding-left: 0; }
+        .hint { font-size: 13px; color: var(--text-sub); }
+
+        .info-card { 
+            background: var(--card-bg); border-radius: 20px; padding: 20px; 
+            width: 100%; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(255, 107, 157, 0.08);
+            border-left: 6px solid #ffb6c1; text-align: left;
+        }
+        .info-card .info-title { font-size: 15px; font-weight: 700; color: #666; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .info-card .info-content { font-size: 14px; color: #888; line-height: 1.6; }
+
+        #start-screen { display: none; padding: 40px 24px; flex-direction: column; align-items: center; text-align: center; flex: 1; animation: fadeIn 0.5s ease-out; }
+        
+        .header-illustration { font-size: 60px; margin-bottom: 10px; line-height: 1; }
+        .header-title { font-size: 24px; font-weight: 800; color: var(--primary-dark); margin-bottom: 20px; }
+
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-bottom: 30px; }
+        .feature-card { background: #fff; border-radius: 16px; padding: 20px 10px; box-shadow: 0 4px 15px rgba(255, 107, 157, 0.05); display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
+        .feature-card:hover { transform: translateY(-3px); }
+        .feature-card .icon { font-size: 26px; margin-bottom: 8px; }
+        .feature-card .num { color: var(--primary); font-size: 20px; font-weight: 800; margin-bottom: 2px; }
+        .feature-card .text { color: var(--text-sub); font-size: 13px; }
+
+        .desc-box { background: #fff; border-radius: 20px; padding: 24px; text-align: left; width: 100%; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(255, 107, 157, 0.05); }
+        .desc-box h3 { font-size: 16px; color: var(--primary-dark); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .desc-box p { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 15px; }
+        .tag { display: flex; align-items: center; background: #fff5f8; padding: 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; color: #666; font-weight: 500; gap: 8px; }
+
+        #quiz-screen { display: none; padding: 30px 24px; flex-direction: column; flex: 1; }
+        
+        .header-bar { display: flex; align-items: center; margin-bottom: 30px; }
+        .progress-text { font-size: 14px; color: var(--primary); font-weight: 800; margin-right: 15px; width: 45px; }
+        .progress-track { flex: 1; height: 10px; background: #fbd6e3; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #ffb6c1, #ff6b9d); width: 0%; transition: width 0.4s ease; border-radius: 5px; }
+
+        .question-container { animation: slideInRight 0.3s ease-out forwards; }
+        .question-title { font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 25px; line-height: 1.5; }
+        .options-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px;}
+        
+        .option-btn { 
+            background: #ffffff; border: 2px solid transparent; padding: 16px 20px; border-radius: 14px; 
+            font-size: 15px; color: #4b5563; text-align: left; cursor: pointer; font-weight: 500;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.02); transition: all 0.2s ease; line-height: 1.4;
+            display: flex; align-items: center;
+        }
+        .option-btn::before {
+            content: ''; display: inline-block; width: 18px; height: 18px; 
+            border: 2px solid #fbd6e3; border-radius: 50%; margin-right: 12px; flex-shrink: 0; transition: all 0.2s;
+        }
+        .option-btn:active { transform: scale(0.98); }
+        .option-btn.selected { 
+            border-color: var(--primary); background: #fff5f8; color: var(--text-main); 
+        }
+        .option-btn.selected::before { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 3px #fff; }
+
+        #result-screen { display: none; padding: 40px 24px; flex-direction: column; align-items: center; text-align: center; flex: 1; }
+        
+        .result-header { font-size: 15px; color: var(--text-sub); font-weight: 600; margin-bottom: 10px; letter-spacing: 1px; }
+        .result-emoji { font-size: 50px; margin-bottom: 10px; animation: popIn 0.6s ease-out; }
+        .city-name { font-size: 48px; font-weight: 900; color: var(--primary-dark); margin-bottom: 25px; }
+        
+        .score-circle { position: relative; width: 140px; height: 140px; margin-bottom: 25px; }
+        .score-circle svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .score-circle circle { fill: none; stroke-width: 10; stroke-linecap: round; }
+        .circle-bg { stroke: #fbd6e3; }
+        .circle-progress { stroke: url(#gradient); stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 1.5s ease-out; }
+        
+        .score-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .score-num { font-size: 38px; font-weight: 900; color: var(--primary); line-height: 1; margin-bottom: 3px; }
+        .score-label { font-size: 12px; color: var(--text-sub); font-weight: 600; }
+
+        .city-desc-card { 
+            background: #ffffff; padding: 24px; border-radius: 20px; font-size: 15px; color: #555; 
+            line-height: 1.8; text-align: left; margin-bottom: 30px; width: 100%; 
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.08); border-left: 5px solid var(--primary);
+            position: relative;
+        }
+        .city-desc-card::after { content: '✨'; position: absolute; bottom: 10px; right: 15px; font-size: 20px; opacity: 0.5; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div class="bg-hearts" id="heart-container"></div>
+
+<div class="app-container">
+    
+    <div id="verify-screen">
+        <div class="icon-box">🔐</div>
+        <h1>2026城市匹配测试</h1>
+        <div class="subtitle">CITY SOUL MATCH · 2026</div>
+
+        <div class="verify-card">
+            <h2>🔑 请输入校验码</h2>
+            <div class="input-wrapper">
+                <input type="password" id="verify-input" maxlength="4" placeholder="请输入4位数字校验码" onkeydown="if(event.key === 'Enter') checkCode()" />
+            </div>
+            <div class="hint">请输入4位数字校验码</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-title">ℹ️ 说明</div>
+            <div class="info-content">本测验结合性格特质为您匹配最适合的城市，覆盖全国热门城市，仅供参考。</div>
+        </div>
+
+        <button class="btn-primary" onclick="checkCode()">➡️ 验证并开始</button>
+    </div>
+
+    <div id="start-screen">
+        <div class="header-illustration">🗺️✨</div>
+        <div class="header-title">准备好寻找你的归属了吗？</div>
+        
+        <div class="feature-grid">
+            <div class="feature-card"><div class="icon" style="color:#ff6b9d">❓</div><div class="num">30道</div><div class="text">深度精选</div></div>
+            <div class="feature-card"><div class="icon">⏱️</div><div class="num">约3分钟</div><div class="text">轻松完成</div></div>
+            <div class="feature-card"><div class="icon">🏙️</div><div class="num">20座</div><div class="text">全国城市</div></div>
+            <div class="feature-card"><div class="icon">🧠</div><div class="num">多维</div><div class="text">智能匹配</div></div>
+        </div>
+
+        <div class="desc-box">
+            <h3>📝 测试说明</h3>
+            <p>本测试共30题，覆盖生活节奏、美食文化、历史底蕴、社交偏好等。点击选项后自动跳题，完成后系统将精准计算出你的灵魂契合之城。</p>
+            <div class="tag"><span>⏱️</span> 生活节奏 — 快节奏奋斗 vs 慢生活惬意</div>
+            <div class="tag"><span>🍜</span> 美食文化 — 火辣江湖 vs 清淡本味</div>
+            <div class="tag"><span>🏛️</span> 城市气质 — 古都底蕴 vs 现代都市</div>
+        </div>
+
+        <button class="btn-primary" onclick="startQuiz()">🌸 开启探索之旅</button>
+    </div>
+
+    <div id="quiz-screen">
+        <div class="header-bar">
+            <div class="progress-text" id="progress-text">1/30</div>
+            <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+        </div>
+        
+        <div id="question-container">
+            <div class="question-title" id="question-text">题目加载中...</div>
+            <div class="options-list" id="options-container"></div>
+        </div>
+    </div>
+
+    <div id="result-screen">
+        <div class="result-header">你的灵魂契合城市是</div>
+        <div class="result-emoji" id="result-emoji">📍</div>
+        <div class="city-name" id="result-city">-</div>
+        
+        <div class="score-circle">
+            <svg>
+                <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#ffb6c1" />
+                        <stop offset="100%" stop-color="#ff6b9d" />
+                    </linearGradient>
+                </defs>
+                <circle class="circle-bg" cx="70" cy="70" r="60"></circle>
+                <circle class="circle-progress" id="score-ring" cx="70" cy="70" r="60"></circle>
+            </svg>
+            <div class="score-content">
+                <div class="score-num" id="result-score">0%</div>
+                <div class="score-label">匹配度</div>
+            </div>
+        </div>
+
+        <div class="city-desc-card" id="result-desc"></div>
+        <button class="btn-primary" onclick="location.reload()">💖 重新测试</button>
+    </div>
+</div>
+
+<script>
+    const heartContainer = document.getElementById('heart-container');
+    const emojis = ['🌸', '💖', '✨', '🎀', '☁️'];
+    for (let i = 0; i < 15; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+        heart.style.animationDelay = Math.random() * 5 + 's';
+        heartContainer.appendChild(heart);
+    }
+
+    function checkCode() {
+        const input = document.getElementById('verify-input').value;
+        if (input === '3738') {
+            document.getElementById('verify-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+        } else {
+            alert("校验码错误，请重新输入（提示：3738）");
+            document.getElementById('verify-input').value = ''; 
+        }
+    }
+
+    function startQuiz() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'flex';
+        window.scrollTo(0, 0); 
+        loadQuestion();
+    }
+
+    const questions = [
+        { title: "周末的清晨，你更倾向于？", options: [
+            { text: "睡到自然醒，去街角喝杯咖啡慢悠悠度过", scores: [0.2, 0.3, 0.5] },
+            { text: "早早起床，去参加行业沙龙或健身打卡", scores: [0.9, 0.5, 0.8] },
+            { text: "逛逛古玩市场，或者去博物馆看展", scores: [0.6, 0.2, 0.2] },
+            { text: "去公司加个班，把没做完的工作搞定", scores: [1.0, 0.4, 0.9] },
+            { text: "约上三五好友，去喝个早茶聊聊天", scores: [0.4, 0.8, 0.6] }
+        ]},
+        { title: "如果面临工作选择，你更看重？", options: [
+            { text: "高薪高压，能让我快速成长", scores: [0.9, 0.5, 0.8] },
+            { text: "朝九晚五，有充足的时间享受生活", scores: [0.2, 0.5, 0.3] },
+            { text: "环境自由，能包容我天马行空的想法", scores: [0.5, 0.6, 0.9] },
+            { text: "同事氛围好，离家近不折腾", scores: [0.3, 0.4, 0.2] },
+            { text: "行业前景好，能接触顶尖资源", scores: [0.8, 0.5, 0.9] }
+        ]},
+        { title: "下班后的夜晚，你通常怎么度过？", options: [
+            { text: "直接回家，做饭看剧，享受独处", scores: [0.1, 0.2, 0.3] },
+            { text: "约朋友去酒吧或livehouse放松", scores: [0.8, 0.8, 0.9] },
+            { text: "去健身房撸铁，或者夜跑", scores: [0.7, 0.4, 0.7] },
+            { text: "去商圈逛街吃夜宵", scores: [0.6, 0.9, 0.8] },
+            { text: "去上夜校或培训班提升自己", scores: [0.9, 0.3, 0.8] }
+        ]},
+        { title: "面对一个长假，你的旅行方式是？", options: [
+            { text: "特种兵式打卡，一天跑三个景点", scores: [0.9, 0.7, 0.8] },
+            { text: "找一个海岛，每天睡到自然醒晒太阳", scores: [0.1, 0.2, 0.4] },
+            { text: "去一个古镇，体验当地的文化和手工艺", scores: [0.3, 0.4, 0.1] },
+            { text: "去大城市购物，感受繁华", scores: [0.8, 0.6, 0.9] },
+            { text: "去户外徒步露营，亲近自然", scores: [0.5, 0.5, 0.3] }
+        ]},
+        { title: "你理想中的居住环境是？", options: [
+            { text: "老城区的青石板路，邻里街坊很亲切", scores: [0.2, 0.6, 0.1] },
+            { text: "新区的江景房，视野开阔设施完善", scores: [0.6, 0.3, 0.8] },
+            { text: "繁华市中心，下楼就是商场和地铁", scores: [0.9, 0.7, 0.9] },
+            { text: "安静的郊区大别墅，带个小花园", scores: [0.2, 0.4, 0.5] },
+            { text: "充满艺术气息的LOFT公寓", scores: [0.5, 0.5, 0.8] }
+        ]},
+        { title: "当你感到压力很大时，你会？", options: [
+            { text: "去大吃一顿，化悲愤为食欲", scores: [0.6, 0.9, 0.5] },
+            { text: "去公园散步，或者看一场电影", scores: [0.2, 0.2, 0.5] },
+            { text: "去KTV唱歌或者去电玩城发泄", scores: [0.8, 0.6, 0.9] },
+            { text: "把自己关在房间里疯狂打游戏", scores: [0.4, 0.5, 0.7] },
+            { text: "找个安静的地方喝茶看书", scores: [0.1, 0.2, 0.2] }
+        ]},
+        { title: "对于熬夜，你的态度是？", options: [
+            { text: "熬最晚的夜，用最贵的护肤品", scores: [0.9, 0.6, 0.8] },
+            { text: "尽量早睡，规律作息才是王道", scores: [0.2, 0.3, 0.3] },
+            { text: "看心情，偶尔熬夜追剧打游戏", scores: [0.5, 0.5, 0.6] },
+            { text: "习惯了晚睡，夜深人静才有灵感", scores: [0.7, 0.4, 0.8] },
+            { text: "工作需要经常熬夜，没办法", scores: [1.0, 0.5, 0.9] }
+        ]},
+        { title: "在街上遇到发传单的人，你会？", options: [
+            { text: "礼貌接过，哪怕走远了再扔掉", scores: [0.3, 0.5, 0.4] },
+            { text: "摆摆手快速走过，不想被打扰", scores: [0.8, 0.4, 0.7] },
+            { text: "如果感兴趣会停下来聊几句", scores: [0.2, 0.6, 0.5] },
+            { text: "看对方态度，态度好就接", scores: [0.5, 0.5, 0.5] },
+            { text: "当作没看见，直接无视", scores: [0.9, 0.3, 0.8] }
+        ]},
+        { title: "你更喜欢哪种交通工具？", options: [
+            { text: "地铁，准时快捷不堵车", scores: [0.8, 0.3, 0.8] },
+            { text: "共享单车，吹着风感受城市", scores: [0.4, 0.3, 0.5] },
+            { text: "打车，可以在后座安静休息", scores: [0.5, 0.5, 0.4] },
+            { text: "自己开车，自由掌控方向", scores: [0.6, 0.4, 0.7] },
+            { text: "公交，慢慢悠悠看街景", scores: [0.1, 0.3, 0.2] }
+        ]},
+        { title: "如果给你一笔闲钱，你会用来？", options: [
+            { text: "报班学习，投资自己的大脑", scores: [0.9, 0.5, 0.8] },
+            { text: "去旅行，看看外面的世界", scores: [0.4, 0.6, 0.6] },
+            { text: "存起来，看着余额增加有安全感", scores: [0.3, 0.3, 0.2] },
+            { text: "买基金股票，搏一搏单车变摩托", scores: [0.8, 0.4, 0.9] },
+            { text: "疯狂购物，买衣服买包包", scores: [0.6, 0.7, 0.9] }
+        ]},
+        { title: "面对一碗面，你的最爱是？", options: [
+            { text: "清汤寡水，原汁原味的阳春面", scores: [0.3, 0.1, 0.4] },
+            { text: "红油铺满，麻辣鲜香的重庆小面", scores: [0.6, 0.9, 0.6] },
+            { text: "浓油赤酱，带点甜口的上海本帮面", scores: [0.5, 0.5, 0.8] },
+            { text: "羊肉汤面，汤鲜味美大块肉", scores: [0.4, 0.7, 0.2] },
+            { text: "海鲜面，配料丰富原汁原味", scores: [0.3, 0.3, 0.7] }
+        ]},
+        { title: "深夜加班后，你最想用哪种夜宵慰藉自己？", options: [
+            { text: "一顿热气腾腾的麻辣火锅", scores: [0.7, 0.9, 0.6] },
+            { text: "一碗清淡暖胃的海鲜粥", scores: [0.2, 0.1, 0.6] },
+            { text: "便利店的一份关东煮，快速解决", scores: [0.8, 0.4, 0.8] },
+            { text: "路边的烧烤摊，撸串喝啤酒", scores: [0.5, 0.9, 0.5] },
+            { text: "点个炸鸡外卖，配可乐", scores: [0.6, 0.7, 0.8] }
+        ]},
+        { title: "和朋友聚餐，你通常选择去哪？", options: [
+            { text: "路边摊烧烤，大口吃肉大口喝酒", scores: [0.6, 0.9, 0.5] },
+            { text: "精致的西餐厅，环境优雅", scores: [0.5, 0.2, 0.9] },
+            { text: "老字号的私房菜，吃的是底蕴", scores: [0.4, 0.5, 0.2] },
+            { text: "网红打卡店，排队也要吃", scores: [0.8, 0.7, 0.9] },
+            { text: "去朋友家里，大家一起做饭", scores: [0.2, 0.4, 0.4] }
+        ]},
+        { title: "你对“香菜”的态度是？", options: [
+            { text: "香菜是灵魂，没有香菜的菜没有灵魂", scores: [0.5, 0.8, 0.5] },
+            { text: "可以接受，但没有也无所谓", scores: [0.5, 0.5, 0.5] },
+            { text: "绝对不行，闻到味道就受不了", scores: [0.6, 0.2, 0.6] },
+            { text: "吃火锅必须要有，平时不吃", scores: [0.5, 0.7, 0.6] },
+            { text: "视菜品而定，有的菜必须放", scores: [0.5, 0.6, 0.5] }
+        ]},
+        { title: "如果自己做饭，你的风格是？", options: [
+            { text: "快手菜，讲究效率和速度", scores: [0.8, 0.5, 0.7] },
+            { text: "煲汤炖肉，享受慢工出细活", scores: [0.2, 0.4, 0.3] },
+            { text: "跟着网上的教程复刻网红美食", scores: [0.6, 0.7, 0.8] },
+            { text: "随便弄点，能吃就行", scores: [0.9, 0.3, 0.8] },
+            { text: "大菜硬菜，逢年过节露一手", scores: [0.3, 0.7, 0.5] }
+        ]},
+        { title: "对于甜品的喜爱程度？", options: [
+            { text: "非常喜欢，饭后必须来一点", scores: [0.4, 0.3, 0.8] },
+            { text: "一般般，偶尔吃一次", scores: [0.5, 0.5, 0.5] },
+            { text: "不太喜欢，更偏爱咸辣口", scores: [0.6, 0.9, 0.5] },
+            { text: "喜欢，尤其是颜值高的甜品", scores: [0.6, 0.3, 0.9] },
+            { text: "怕胖，很少吃", scores: [0.4, 0.2, 0.4] }
+        ]},
+        { title: "周末去逛菜市场，你最大的感受是？", options: [
+            { text: "充满烟火气，非常治愈", scores: [0.3, 0.7, 0.2] },
+            { text: "有点嘈杂，我更喜欢去超市", scores: [0.8, 0.4, 0.8] },
+            { text: "很少去菜市场，都是点外卖", scores: [0.9, 0.5, 0.9] },
+            { text: "觉得脏乱差，不喜欢去", scores: [0.9, 0.3, 0.9] },
+            { text: "喜欢去买农民自家种的菜", scores: [0.2, 0.6, 0.1] }
+        ]},
+        { title: "你更愿意尝试哪种异国料理？", options: [
+            { text: "日料，清淡精致", scores: [0.4, 0.2, 0.8] },
+            { text: "泰餐，酸辣开胃", scores: [0.5, 0.8, 0.6] },
+            { text: "法餐，仪式感满满", scores: [0.5, 0.3, 0.9] },
+            { text: "韩餐，烤肉炸鸡配烧酒", scores: [0.6, 0.7, 0.8] },
+            { text: "中东菜，大口吃肉", scores: [0.4, 0.9, 0.3] }
+        ]},
+        { title: "喝奶茶时，你的标配是？", options: [
+            { text: "全糖加珍珠椰果，料越多越好", scores: [0.5, 0.8, 0.7] },
+            { text: "三分糖去冰，纯茶底最健康", scores: [0.4, 0.2, 0.6] },
+            { text: "不喜欢喝奶茶，更爱喝咖啡", scores: [0.8, 0.3, 0.9] },
+            { text: "喜欢尝试各种新品，打卡拍照", scores: [0.7, 0.6, 0.9] },
+            { text: "只喝白开水，最养生", scores: [0.1, 0.2, 0.2] }
+        ]},
+        { title: "如果城市有味道，你希望你的城市是？", options: [
+            { text: "牛油火锅的麻辣味", scores: [0.5, 1.0, 0.6] },
+            { text: "海风的咸湿味", scores: [0.3, 0.3, 0.5] },
+            { text: "雨后泥土的清新味", scores: [0.2, 0.2, 0.3] },
+            { text: "面包房飘出的麦香味", scores: [0.3, 0.4, 0.7] },
+            { text: "古寺庙宇的香火味", scores: [0.2, 0.5, 0.1] }
+        ]},
+        { title: "走在街头，哪种风景最让你心动？", options: [
+            { text: "古城墙下的银杏叶，充满历史底蕴", scores: [0.2, 0.5, 0.1] },
+            { text: "摩天大楼的玻璃幕墙，折射出都市繁华", scores: [0.9, 0.5, 0.9] },
+            { text: "充满烟火气的弄堂和菜市场", scores: [0.4, 0.7, 0.4] },
+            { text: "文艺清新的咖啡馆和小店", scores: [0.3, 0.4, 0.7] },
+            { text: "赛博朋克感十足的霓虹灯牌", scores: [0.8, 0.7, 0.9] }
+        ]},
+        { title: "交朋友时，你更喜欢哪种节奏？", options: [
+            { text: "慢热型，细水长流，重质不重量", scores: [0.2, 0.4, 0.3] },
+            { text: "自来熟，四海之内皆兄弟", scores: [0.8, 0.7, 0.8] },
+            { text: "看眼缘，感觉对了就行", scores: [0.5, 0.5, 0.5] },
+            { text: "只和志同道合的人做朋友", scores: [0.4, 0.4, 0.6] },
+            { text: "不喜欢社交，喜欢独处", scores: [0.1, 0.3, 0.2] }
+        ]},
+        { title: "如果有一天空闲，你更愿意去？", options: [
+            { text: "听一场古典音乐会或看话剧", scores: [0.3, 0.3, 0.2] },
+            { text: "逛最新的潮玩店或去Livehouse", scores: [0.8, 0.6, 0.9] },
+            { text: "去公园散步，或者在家躺着", scores: [0.1, 0.3, 0.2] },
+            { text: "去图书馆看一天书", scores: [0.3, 0.2, 0.4] },
+            { text: "去逛街购物买买买", scores: [0.7, 0.6, 0.9] }
+        ]},
+        { title: "你更喜欢哪种类型的电影？", options: [
+            { text: "文艺片，节奏缓慢有深度", scores: [0.1, 0.4, 0.2] },
+            { text: "好莱坞大片，特效炸裂", scores: [0.8, 0.6, 0.9] },
+            { text: "喜剧片，开心最重要", scores: [0.5, 0.6, 0.6] },
+            { text: "悬疑片，烧脑反转", scores: [0.7, 0.5, 0.8] },
+            { text: "纪录片，真实有力量", scores: [0.3, 0.4, 0.3] }
+        ]},
+        { title: "在社交场合，你通常是？", options: [
+            { text: "主导话题的焦点人物", scores: [0.9, 0.6, 0.9] },
+            { text: "安静倾听的观察者", scores: [0.2, 0.5, 0.3] },
+            { text: "负责活跃气氛的搞笑担当", scores: [0.7, 0.7, 0.8] },
+            { text: "只和认识的人聊天", scores: [0.3, 0.5, 0.4] },
+            { text: "找个角落玩手机，想早点走", scores: [0.4, 0.3, 0.5] }
+        ]},
+        { title: "对于传统节日，你的态度是？", options: [
+            { text: "非常有仪式感，必须按传统习俗过", scores: [0.2, 0.5, 0.1] },
+            { text: "趁机放假休息，或者出门旅游", scores: [0.7, 0.6, 0.8] },
+            { text: "和平时一样，没什么特别感觉", scores: [0.6, 0.4, 0.7] },
+            { text: "喜欢节日的氛围，会去凑热闹", scores: [0.6, 0.7, 0.6] },
+            { text: "只关心放假和发不发过节费", scores: [0.5, 0.5, 0.5] }
+        ]},
+        { title: "你更愿意把钱花在？", options: [
+            { text: "买各种电子产品和数码潮玩", scores: [0.8, 0.4, 0.9] },
+            { text: "看展、看演出等文化消费", scores: [0.3, 0.3, 0.2] },
+            { text: "旅游、户外露营等体验", scores: [0.5, 0.5, 0.5] },
+            { text: "买衣服、包包、护肤品", scores: [0.7, 0.6, 0.9] },
+            { text: "吃大餐，恩格尔系数极高", scores: [0.6, 0.9, 0.6] }
+        ]},
+        { title: "如果让你学一门手艺，你会选？", options: [
+            { text: "陶艺或书法，修心养性", scores: [0.1, 0.3, 0.1] },
+            { text: "摄影或视频剪辑，记录生活", scores: [0.6, 0.5, 0.8] },
+            { text: "咖啡拉花或调酒，又酷又实用", scores: [0.7, 0.6, 0.8] },
+            { text: "编程或设计，能赚钱", scores: [0.9, 0.4, 0.9] },
+            { text: "做饭，喂饱自己最重要", scores: [0.3, 0.7, 0.3] }
+        ]},
+        { title: "面对网上的热门争议话题，你会？", options: [
+            { text: "吃瓜看戏，不发表意见", scores: [0.5, 0.5, 0.5] },
+            { text: "理性分析，发表长篇评论", scores: [0.6, 0.5, 0.7] },
+            { text: "快速划过，不想浪费时间", scores: [0.8, 0.4, 0.8] },
+            { text: "在评论区跟人激烈对线", scores: [0.9, 0.6, 0.9] },
+            { text: "看情况，实在忍不住才发声", scores: [0.5, 0.5, 0.6] }
+        ]},
+        { title: "你觉得一座城市最吸引你的是？", options: [
+            { text: "浓厚的历史文化底蕴和人情味", scores: [0.1, 0.5, 0.1] },
+            { text: "无限的发展机会和公平的竞争环境", scores: [0.9, 0.5, 0.9] },
+            { text: "舒适的气候和美丽的自然风光", scores: [0.2, 0.3, 0.3] },
+            { text: "丰富的美食和夜生活", scores: [0.6, 0.9, 0.8] },
+            { text: "包容度极高，没人管你结不结婚", scores: [0.5, 0.4, 0.9] }
+        ]}
+    ];
+
+    const cities = [
+        { name: "成都", emoji: "🐼", desc: "慢节奏的生活和火辣的美食，茶馆与火锅并存。包容你所有的奇思妙想，是一座你来了就不想走的城市。", target: [3, 9, 4] },
+        { name: "上海", emoji: "🏙️", desc: "魔都，充满机遇与挑战，精致、现代、海派文化。如果你喜欢快节奏与都市繁华，这里绝对能让你闪闪发光。", target: [9, 4, 9] },
+        { name: "北京", emoji: "🏛️", desc: "古都底蕴与现代繁华完美交融，这里有最快的节奏，也有最深厚的历史。它适合每一个心怀梦想、愿意拼搏的你。", target: [8, 6, 5] },
+        { name: "杭州", emoji: "🌊", desc: "一半山水一半城，既有西湖的温婉，又有互联网的活力。在这里，你能找到生活与奋斗的绝佳平衡点。", target: [5, 3, 7] },
+        { name: "西安", emoji: "🏯", desc: "十三朝古都，城墙下满是历史的痕迹。在这里，你可以慢下来，吃一碗正宗的肉夹馍，感受古都的沧桑与厚重。", target: [4, 8, 2] },
+        { name: "广州", emoji: "🥢", desc: "务实与包容并存，早茶文化源远流长。这里既有现代化的CBD，又有充满生活气息的老街，适合懂得享受生活的你。", target: [6, 4, 6] },
+        { name: "重庆", emoji: "🌶️", desc: "8D魔幻城市，充满赛博朋克感。这里有最辣的火锅，最热情的人，如果你喜欢热辣滚烫的烟火气，这里就是天堂。", target: [6, 10, 7] },
+        { name: "长沙", emoji: "🧋", desc: "娱乐之都，不夜城。这里有吃不完的夜市、喝不完的奶茶，是一座充满活力、热情似火，让人快乐的年轻城市。", target: [7, 9, 8] },
+        { name: "大理", emoji: "🏔️", desc: "风花雪月，苍山洱海。这里没有内卷，只有闲适的时光和慢节奏的惬意，适合渴望洗涤心灵、寻找宁静的你。", target: [1, 5, 3] },
+        { name: "深圳", emoji: "💻", desc: "搞钱之都，充满年轻的活力。这里有最快的生活节奏，也有最包容的移民文化，适合野心勃勃、不甘平庸的你。", target: [10, 5, 9] },
+        { name: "南京", emoji: "🍂", desc: "六朝古都，金陵一梦。这里有梧桐大道的浪漫，也有厚重的历史底蕴。生活节奏适中，充满书卷气。", target: [4, 5, 3] },
+        { name: "武汉", emoji: "🌉", desc: "九省通衢，江城武汉。这里有热干面的过早文化，有江湖气的码头文化，是一座充满生命力、直爽泼辣的城市。", target: [7, 8, 6] },
+        { name: "苏州", emoji: "🎋", desc: "江南水乡，园林之城。小桥流水人家，生活极其精致温婉。适合喜欢慢生活、追求生活品质和古典美的你。", target: [3, 4, 2] },
+        { name: "青岛", emoji: "🍺", desc: "红瓦绿树，碧海蓝天。这里有喝不完的啤酒，吃不完的海鲜。生活惬意舒适，是北方的海滨明珠。", target: [4, 6, 6] },
+        { name: "厦门", emoji: "🌴", desc: "文艺清新的海岛城市。有温柔的海风和浪漫的鼓浪屿。适合喜欢慢节奏、热爱摄影和小清新的你。", target: [3, 4, 7] },
+        { name: "天津", emoji: "🎭", desc: "哏儿都，充满幽默感的城市。相声文化发达，人们乐观豁达。生活节奏慢，美食丰富，极具市井魅力。", target: [4, 7, 5] },
+        { name: "昆明", emoji: "🌸", desc: "春城，四季如春。这里阳光充沛，鲜花遍地。生活极其慵懒舒适，是一座没有冬天的绝佳养老城市。", target: [2, 5, 4] },
+        { name: "三亚", emoji: "🏖️", desc: "东方夏威夷，热带海滨风情。阳光、沙滩、椰子树。如果你渴望彻底放松、拥抱自然，这里是度假天堂。", target: [1, 4, 5] },
+        { name: "拉萨", emoji: "🏔️", desc: "日光之城，信仰之地。这里有最纯净的天空和最虔诚的信仰。适合渴望洗涤灵魂、寻找内心平静的你。", target: [1, 6, 2] },
+        { name: "哈尔滨", emoji: "⛄", desc: "冰城，充满异域风情。这里有冰雪大世界，有豪爽的东北人，还有正宗的锅包肉和红肠，适合喜欢热情和冰雪的你。", target: [5, 7, 6] }
+    ];
+
+    let currentQuestion = 0;
+    let userScores = [0, 0, 0]; 
+    const totalQuestions = questions.length;
+    const maxScorePerDimension = 30; 
+
+    function loadQuestion() {
+        if (currentQuestion >= totalQuestions) {
+            showResult();
+            return;
+        }
+        
+        const q = questions[currentQuestion];
+        
+        document.getElementById('progress-text').innerText = `${currentQuestion + 1}/${totalQuestions}`;
+        document.getElementById('progress').style.width = `${((currentQuestion) / totalQuestions) * 100}%`;
+
+        const container = document.getElementById('question-container');
+        container.style.animation = 'none';
+        container.offsetHeight; 
+        container.style.animation = 'slideInRight 0.3s ease-out forwards';
+
+        document.getElementById('question-text').innerText = q.title;
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+
+        q.options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = option.text;
+            btn.onclick = () => selectOption(btn, option.scores);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function selectOption(btn, scores) {
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+        btn.classList.add('selected');
+        
+        for(let i = 0; i < userScores.length; i++) {
+            userScores[i] += scores[i];
+        }
+
+        setTimeout(() => {
+            currentQuestion++;
+            window.scrollTo(0, 0); 
+            loadQuestion();
+        }, 300);
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'flex';
+        window.scrollTo(0, 0);
+
+        let normalizedScores = userScores.map(score => (score / maxScorePerDimension) * 10);
+
+        let bestCity = cities[0];
+        let minDistance = Infinity;
+
+        cities.forEach(city => {
+            let distance = 0;
+            for (let i = 0; i < normalizedScores.length; i++) {
+                distance += Math.pow(normalizedScores[i] - city.target[i], 2);
+            }
+            distance = Math.sqrt(distance);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                bestCity = city;
+            }
+        });
+
+        let matchPercent = Math.floor(100 - (minDistance * 4)); 
+        if (matchPercent > 99) matchPercent = 99;
+        if (matchPercent < 60) matchPercent = 60;
+
+        document.getElementById('result-emoji').innerText = bestCity.emoji;
+        document.getElementById('result-city').innerText = bestCity.name;
+        document.getElementById('result-desc').innerText = bestCity.desc;
+        
+        let currentScore = 0;
+        const scoreEl = document.getElementById('result-score');
+        const timer = setInterval(() => {
+            if (currentScore >= matchPercent) {
+                clearInterval(timer);
+            } else {
+                currentScore++;
+                scoreEl.innerText = currentScore + '%';
+            }
+        }, 20);
+
+        setTimeout(() => {
+            const ring = document.getElementById('score-ring');
+            const radius = 60; 
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (matchPercent / 100) * circumference;
+            ring.style.strokeDashoffset = offset;
+        }, 100);
+    }
+</script>
+
+</body>
+</html>
